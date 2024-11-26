@@ -51,6 +51,7 @@ for item_number, group in duplicate_rows.groupby('Item number'):
     #check if they are all the same
     are_all_same = all(element == groupPrices[0] for element in groupPrices)
     if not are_all_same:
+        print(f"Had to remove listing ID {row["Item number"]} because prices were different: {groupPrices}")
         duplicates_to_remove.append(row["Item number"])
 
 print(f"Removed: {duplicates_to_remove}\n{len(duplicates_to_remove)} items")
