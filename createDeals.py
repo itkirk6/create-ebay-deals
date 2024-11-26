@@ -2,16 +2,30 @@ import os
 import pandas as pd
 import math
 
-DBC_FOLDER = os.path.join("C:\\Users", "PC", "Documents", "DBC", "listing reports")
+DBC_FOLDER = os.path.join(os.getcwd(), "listing reports")
 fileName = input("Enter Filename of active listings report: ")
+
+while 1:
+    switchAdjustmentAmount = input("Enter amount to adjust switch prices up from listing price (recommended 10): ")
+    try:
+        switchAdjustmentAmount = int(switchAdjustmentAmount)
+        break
+    except:
+        if switchAdjustmentAmount == "":
+            switchAdjustmentAmount = 0
+            break    
+    print("Please enter a valid intetger adjustment amount or hit enter to default to 0")
+    #please don't judge me for this masterpiece
 
 filePath = os.path.join(DBC_FOLDER, fileName+".csv")
 
 df = pd.read_csv(filePath)
+print(f"Read in csv with {len(df)} entries")
 
 #build a table with just unique items
 df["Item number"] = pd.to_numeric(df["Item number"])
 df_unique_items = df.drop_duplicates(subset=['Item number'])
+print(f"Dropped {len(df)-len(df_unique_items)} duplicate listings")
 #df_unique_items.to_csv("df_unique_items"+".csv", index=False)
 
 #build a table with just duplicate items
@@ -39,7 +53,7 @@ for item_number, group in duplicate_rows.groupby('Item number'):
     if not are_all_same:
         duplicates_to_remove.append(row["Item number"])
 
-print(f"Removed: {duplicates_to_remove}")
+print(f"Removed: {duplicates_to_remove}\n{len(duplicates_to_remove)} items")
 df_filtered = df_unique_items[~df_unique_items['Item number'].isin(duplicates_to_remove)]
 #df_filtered.to_csv("df_filtered_1"+".csv", index=False)
 
@@ -88,6 +102,7 @@ print(f"attempt at 40 laptop highest quantity: pulled {top_rows.shape[0]}")
 df_new = df_new._append(df_laptop)
 df_filtered = df_filtered.drop(top_rows.index)
 
+
 #check to see if we're at 200:
 num_rows, num_columns = df_new.shape
 if num_rows > 200:
@@ -110,6 +125,13 @@ def deal_price(row):
     price = get_item_price(row)
     # Find the next multiple of 5 greater than the given number
     new_price = math.ceil((price + 0.1) / 5.0) * 5.0 - 0.01
+
+    #add in the switch adjustment
+    if "switch" in str(row['Title']).lower():
+        new_price += switchAdjustmentAmount
+        new_price = float(str(new_price).split(".")[0] + ".99")
+        #this is to get rid of floating-point errors, i know it's janky
+
     return str(new_price)
 
 df_final["Deal Price"] = df_new.apply(lambda row: deal_price(row), axis=1)
@@ -157,4 +179,7 @@ df_final = df_final.sort_values(by="Quantity", ascending=False)
 
 #save the dataframe
 df_final.to_csv(fileName+".csv", index=False)
+print(fileName)
+
+input("Press enter to close")
 
