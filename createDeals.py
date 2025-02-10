@@ -1,12 +1,29 @@
 import os
 import pandas as pd
+import tkinter as tk
+from tkinter import filedialog
 import math
 
+def choose_file(prompt):
+    root = tk.Tk()
+    root.withdraw() #hide the root window
+
+    file_path = filedialog.askopenfilename(
+        title=prompt,
+        filetypes=[("CSV files", "*.csv"), ("Excel files", "*.xlsx;*.xls")]
+    )
+
+    if not file_path:
+        raise ValueError("No file selected")
+    
+    return file_path
+
+
 DBC_FOLDER = os.path.join(os.getcwd(), "listing reports")
-fileName = input("Enter Filename of active listings report: ")
+fileName = choose_file("Choose Active Listing Report: ")
 
 while 1:
-    switchAdjustmentAmount = input("Enter amount to adjust switch prices up from listing price (recommended 10): ")
+    switchAdjustmentAmount = input("Enter amount to adjust switch prices up from listing price (recommended 5): ")
     try:
         switchAdjustmentAmount = int(switchAdjustmentAmount)
         break
@@ -17,9 +34,7 @@ while 1:
     print("Please enter a valid intetger adjustment amount or hit enter to default to 0")
     #please don't judge me for this masterpiece
 
-filePath = os.path.join(DBC_FOLDER, fileName+".csv")
-
-df = pd.read_csv(filePath)
+df = pd.read_csv(fileName)
 print(f"Read in csv with {len(df)} entries")
 
 #build a table with just unique items
@@ -179,7 +194,7 @@ df_final["Quantity"] = pd.to_numeric(df_final["Quantity"])
 df_final = df_final.sort_values(by="Quantity", ascending=False)
 
 #save the dataframe
-df_final.to_csv(fileName+".csv", index=False)
+df_final.to_csv(fileName.split("/")[-1].split(".")[0]+"_submission.csv", index=False)
 print(fileName)
 
 input("Press enter to close")
